@@ -1,0 +1,63 @@
+* {
+    box-sizing: border-box;            
+}
+
+body {
+    margin: 0;
+}
+
+#row:after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+#usergame {
+    float: left;
+    width: 25%;
+    height: 800px;
+    border-style: solid;
+    border-color: blue;
+    border-width: 3px;
+    padding-top: 30px;
+}
+
+#info {
+    float: left;
+    width: 50%;
+    border-style: solid;
+    border-width: 1px;    
+    height: 800px;
+    overflow: auto;         
+}
+
+.msgUG {
+    text-align: left;
+    color: blue;
+}
+
+.msgCG {
+    text-align: right;
+    color: green;
+}
+
+#compgame {
+    float: left;
+    width: 25%;
+    height: 800px;
+    border-style: solid;
+    border-color: green;
+    border-width: 3px;
+    padding-top: 30px;    
+}
+
+#progress {
+    width: 100%;
+    background-color: #ddd;
+}
+  
+#bar {
+    width: 0%;
+    height: 30px;
+    background-color: #4CAF50;
+}

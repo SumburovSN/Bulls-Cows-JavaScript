@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Bulls&Cows</title>
+	<link rel="shortcut icon" href="favicon.ico" type="image/x-icon"/>
+    <link rel="stylesheet" type="text/css" href="bcStyle.css">
+    <!-- <link rel="stylesheet" href="jquery-ui.css">
+    <script src="jquery-1.12.4.js"></script>
+    <script src="jquery-ui.js"></script> -->
+    <script src="bcScript.js"></script>
+    
+
+</head>
+<body>
+	<div id="row">
+		<div id="usergame">
+            <h3>User guessing game</h3>
+            Input 4 different numbers:<input type="text" id="userNumber">
+            <br>
+            <button onclick="checkRequest()">Check request</button>
+            <hr>
+            <button onclick="startUserGame()">New game</button>
+              
+        </div>
+        <div id="info">
+            <p class="msgUG">Let's play User Guess game</p>
+            <p class="msgCG">Let's play Computer Guess game</p>
+        </div>
+        <div id="compgame">
+            <!-- <div id="timer"></div> -->
+            <h3>Computer guessing game</h3>            
+            Bulls:<input type="text" id="bulls">
+            <br>
+            Cows:<input type="text" id="cows">
+            <br>
+            <button id="btn" onclick="checkInput()">Check input</button>
+            <hr>
+            <button onclick="startCompGame()">New game</button>
+        </div>        
+    </div>
+    <p>sumburovsn@gmail.com</p>
+    
+</body>
