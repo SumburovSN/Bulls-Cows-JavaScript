@@ -8,3 +8,5 @@ rules:
 5. If the attempt contains the same numeric symbol as the riddle but at the different place compared to the riddle, one cow (C) is added to the response.
 6. As a result, the response may contain no more than 4 bulls and cows together. The response of 4 bulls (B4) means that the riddle has been recognized.
 
+English version consists of 4 files: (1) bc.html (2) bcScripts.js (3) bcStyle.css (4) favicon.ico.
+Russion version includes 2 files: (1) bcRusFull (2) favicon.ico.
