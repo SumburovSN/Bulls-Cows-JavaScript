@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Быки и Коровы</title>
+	<link rel="shortcut icon" href="favicon.ico" type="image/x-icon"/>
+    <style>
+        * {
+            box-sizing: border-box;            
+        }
+
+        body {
+            margin: 0;
+        }
+
+        #row:after {
+            content: "";
+            display: table;
+            clear: both;
+        }
+
+        #usergame {
+            float: left;
+            width: 25%;
+            height: 600px;
+            border-style: solid;
+            border-color: blue;
+            border-width: 3px;
+            padding-top: 30px;
+        }
+
+        #info {
+            float: left;
+            width: 50%;
+            border-style: solid;
+            border-width: 1px;    
+            height: 600px;
+            overflow: auto;         
+        }
+
+        .msgUG {
+            text-align: left;
+            color: blue;
+        }
+
+        .msgCG {
+            text-align: right;
+            color: green;
+        }
+
+        #compgame {
+            float: left;
+            width: 25%;
+            height: 600px;
+            border-style: solid;
+            border-color: green;
+            border-width: 3px;
+            padding-top: 30px;    
+        }
+    </style>
+    
+    
+
+</head>
+<body onload="keyHandler()">
+	<div id="row">
+		<div id="usergame">
+            <h3>Игрок отгадывает</h3>
+            Введите 4 разных цифры:<input type="text" id="userNumber">
+            <br>
+            <button onclick="checkRequest()">Проверить запрос(r)</button>
+            <hr>
+            <button id="btnUG" onclick="startUserGame()">Новая игра(u)</button>
+              
+        </div>
+        <div id="info">
+            <p class="msgUG">Попробуйте отгадать число компьютера</p>
+            <p class="msgCG">Пусть компьютер отгадает Ваше число</p>
+        </div>
+        <div id="compgame">
+            <!-- <div id="timer"></div> -->
+            <h3>Компьтер отгадывает</h3>            
+            Быки:<input type="text" id="bulls">
+            <br>
+            Коровы:<input type="text" id="cows">
+            <br>
+            <button id="btnCheck" onclick="checkInput()">Проверить Ваш ответ(i)</button>
+            <hr>
+            <button id="btnCG" onclick="startCompGame()">Новая игра(c)</button>
+        </div>        
+    </div>
+    <button onclick="rules()">Правила игры(F1)</button><p>sumburovsn@gmail.com</p>
+    <script>
+        let userGuess = "";
+        let compGuess = "";
+        let request = "";
+
+        // delay for use in setInterval() to disable the check button
+        // it was chosen by trials in order the browser had time to 
+        // reflect the changes on a screen
+        // proved in Chrome and Firefox
+        let delay = 100;
+
+        function startUserGame() {
+            if (userGuess) {
+                document.getElementById("info").innerHTML += '<p class="msgUG"> Игра закончена. Загаданное число было ' + userGuess.puzzle + '</p>';
+                userGuess = "";
+            }
+            userGuess = new UserGame();
+            document.getElementById("info").innerHTML += '<p class="msgUG"> Игра началась. Отгадайте число, загаданное компьтером.</p>';
+            document.getElementById("userNumber").focus();
+        }
+
+        function checkRequest() {
+            if (!userGuess) {
+                document.getElementById("info").innerHTML += '<p class="msgUG"> Нажмите "Новая игра".</p>';
+                document.getElementById("btnUG").focus();
+                return;
+            }
+            let trial = document.getElementById("userNumber").value;
+            let result = "";
+            try {
+                trial = userGuess.check(trial);
+                result = getResponse(userGuess.puzzle, trial);
+                userGuess.gameRequests.push(trial);
+                userGuess.gameResponses.push(result);
+                let index = userGuess.gameRequests.length;
+                if (result == 'Б4 К0') {
+                    document.getElementById("info").innerHTML += '<p class="msgUG"> Вы угадали за ' + index + ' ход(ов).</p>';                
+                    userGuess = "";
+                    return;
+                } else document.getElementById("info").innerHTML += '<p class="msgUG"> Попытка ' + index + '. ' + userGuess.gameRequests[index-1] + ' : ' + userGuess.gameResponses[index-1] + '</p>';
+            } catch(error) {
+                document.getElementById("info").innerHTML += '<p class="msgUG">' + error.message + '</p>';
+            }    
+        }
+
+        function startCompGame() {    
+            compGuess = new CompGame();
+            request = pickRiddle();
+            let index = compGuess.gameRequests.length+1;
+            document.getElementById("info").innerHTML += '<p class="msgCG"> Игра началась. Компьютер будет отгадывать число, загаданное Вами.</p>';
+            document.getElementById("info").innerHTML += '<p class="msgCG"> Попытка ' + index + '. ' + request + '.</p>';
+            document.getElementById("bulls").focus();
+        }
+
+        function checkInput() {    
+            if (!compGuess) {
+                document.getElementById("info").innerHTML += '<p class="msgCG"> Нажмите "Новая игра".</p>';
+                document.getElementById("btnCG").focus();
+                return;
+            }
+            
+            let response = "Б" + document.getElementById("bulls").value  + " " + "К" + document.getElementById("cows").value;
+            
+            try {
+                compGuess.check(response);        
+            } catch (error) {
+                document.getElementById("info").innerHTML += '<p class="msgCG">' + error.message + '</p>';
+                return;
+            }
+            
+            compGuess.gameRequests.push(request);
+            compGuess.gameResponses.push(response);
+
+            let index = compGuess.gameRequests.length;
+            document.getElementById("info").innerHTML += '<p class="msgCG">' + index + '. ' + request + ': ' + response + '.</p>';
+            index++;
+
+            compGuess.generateRest();
+                    
+            if (compGuess.rest.length == 0) {
+                document.getElementById("info").innerHTML += '<p class="msgCG"> Один из Ваших ответов был неверен. Давайте начнем другую игру.</p>';
+                compGuess = "";        
+                return;
+            }
+                
+            if (compGuess.rest.length == 1) {
+                document.getElementById("info").innerHTML += '<p class="msgCG">' + index + '. Загаданное число было ' + compGuess.rest[0] + '.</p>';
+                compGuess = "";        
+                return;
+            } else {
+                // setInterval() to disable the check button to reflect the changes on a screen 
+                // maybe it worth to try worker...
+
+                let i = 0;
+                let id = setInterval(frame, delay);
+                function frame() {        
+                    if (i < 1) {
+                        document.getElementById("btnCheck").innerHTML = "Подождите. Думаю...";
+                        document.getElementById("btnCheck").disabled = true;
+                        i++;            
+                    } else {
+                        clearInterval(id);
+                        request = compGuess.analyze();
+                        document.getElementById("btnCheck").innerHTML = "Проверить Ваш ответ(i)";
+                        document.getElementById("btnCheck").disabled = false;
+                        document.getElementById("info").innerHTML += '<p class="msgCG"> Попытка ' + index + '. ' + request + '.</p>';
+                        document.getElementById("bulls").focus();
+                    }
+                }
+            }
+        }
+
+        function getResponse(riddle, attempt) {
+            let bulls = 0
+            let cows = 0
+            for (let i=0; i<4; i++) {
+                if (attempt[i] == riddle[i]) bulls += 1
+                else if (riddle.search(attempt[i]) > -1) cows += 1
+            }
+            return 'Б' + bulls.toString() + ' К' + cows.toString()           
+        }
+
+        function pickRiddle() {
+            let numeric = "0123456789";
+            let puzzle = "";
+            while (puzzle.length != 4) {
+                let i = Math.floor(Math.random() * numeric.length);
+                let l = numeric.substr(i, 1);                
+                puzzle += l;
+                numeric = numeric.replace(l, "");
+            }
+            return puzzle
+        }
+
+        function UserGame() {
+            this.gameLog = [];
+            this.gameRequests = [];
+            this.gameResponses = [];
+            this.puzzle = pickRiddle();
+
+            this.check = function(attempt) {
+                let trial = ""
+                let numeric = "0123456789";
+
+                if (attempt.length != 4) throw TypeError("Цифр не 4.")
+
+                for (let i=0; i<4; i++) {
+                    if (numeric.search(attempt[i]) < 0) throw TypeError("Символы должны быть цифровыми.")
+                    if (trial.search(attempt[i]) < 0) trial += attempt[i]
+                    else throw TypeError("Цифры должны быть разными.")
+                }
+
+                if (this.gameRequests.includes(trial)) throw TypeError("Число уже было проверено.")
+
+            return trial
+            }
+        }
+
+        function CompGame() {
+            this.gameRequests = [];
+            this.gameResponses = [];
+
+            this.full = generate_full();
+            this.rest = this.full.slice();
+            this.getResponse = getResponse;
+
+            this.check = function(attempt) {
+                let result = "";
+                const right = ['Б4 К0', 'Б3 К0',
+                                'Б2 К2', 'Б2 К1', 'Б2 К0',
+                                'Б1 К3', 'Б1 К2', 'Б1 К1', 'Б1 К0',
+                                'Б0 К4', 'Б0 К3', 'Б0 К2', 'Б0 К1', 'Б0 К0']
+                if (right.includes(attempt)) result = attempt
+                else throw TypeError("Неправильный ответ.")         
+                
+                return result
+            }
+
+            // generate function returns the list of all possible arrangements of 4 from 10 numeric symbols
+            // return full: list of all possible arrangements of 4 from 10 numeric symbols with length 5040
+            function generate_full() {
+                let full = [];
+                let numeric0 = "0123456789";
+
+                for (i = 0; i < numeric0.length; i++) {
+                    numeric1 = numeric0.replace(numeric0[i], "");
+                    
+                    for (j = 0; j < numeric1.length; j++) {
+                        numeric2 = numeric1.replace(numeric1[j], "");
+
+                        for (k = 0; k < numeric2.length; k++) {
+                            numeric3 = numeric2.replace(numeric2[k], "");
+
+                            for (l = 0; l < numeric3.length; l++) {
+                                full.push(numeric0[i] + numeric1[j] + numeric2[k] + numeric3[l])
+                            }
+                        }
+                    }
+                }
+                return full
+            }
+
+            // generate function returns the list of all possible numeric which correspond to the gameResponses array
+            // return result: the list of all possible string of 4 numeric symbols
+
+            this.generateRest = function() {
+                let restNew = [];
+                let index =  this.gameRequests.length-1;
+                let key = this.gameRequests[index];
+                
+                this.rest.forEach(element => {        
+                    if (getResponse(key, element) == this.gameResponses[index]) restNew.push(element);
+                });
+                // for (let i = 0; i < this.rest.length; i++) {
+                //     let current = this.rest[i];
+                //     document.getElementById("info").innerHTML += "<br>" + current;
+                //     if (this.getResponse(key, current) == this.gameResponses[index]) restNew.push(current);
+                // }
+                this.rest = restNew;
+            }
+
+            // analyze function forms the array of the entries each of them is also array, e.g.:
+            // [
+            // ['1234', 338], <- the entry
+            // ...
+            // ['5678', 234]],
+            // ...
+            // ]
+            // Each numeric of full array is checked against each numeric in rest array, then results are aggregated according their combinations ('B0 C1', 'B0 C2', etc.),
+            // and maximum of all possible combinations is chosen to put into entry array.
+            // Then function forms the optimal request based on the minimum of all maximums values
+            // At last function returns the next request for User to be checked
+            // requires protection against empty rest array
+            // :return trial: the next request of possible string of 4 numeric symbols
+            
+            this.analyze = function() {
+
+                let analysis = [];
+
+                this.full.forEach(elementFromFull => {
+                    let entry = [];
+                    let amounts = [];
+                    let responses = [];
+
+                    let result = "";
+                    let index = 0;
+
+                    this.rest.forEach(elementFromRest => {
+                        result = getResponse(elementFromRest, elementFromFull);
+                        index = responses.indexOf(result);
+
+                        if (index >= 0) amounts[index] += 1
+                        else {
+                            responses.push(result);
+                            amounts.push(1);
+                        }
+                    
+                    });
+
+                    amounts.sort(function(a, b){return b - a});
+
+                    entry.push(elementFromFull);
+                    entry.push(amounts[0]);
+                    analysis.push(entry);            
+                });
+                let result = [];
+                
+                analysis.sort((a, b) => a[1] - b[1]);
+
+                let minimum = analysis[0][1];      
+                
+                analysis.forEach(element => {
+                    if (element[1] == minimum) result.push(element[0]);
+                });
+
+                let priority = [];
+
+                result.forEach(element => {
+                    if (this.rest.includes(element)) priority.push(element)
+                })
+
+                if (priority.length) result = priority
+
+                let index = Math.floor(Math.random() * result.length);
+                trial = result[index];
+                return trial;        
+            }
+        
+        }
+
+        function keyHandler() {
+            document.addEventListener('keydown', function(event) {
+                var keyDown = event.key;            
+                            
+                switch(keyDown) {
+                case "u":
+                    startUserGame();
+                    break;
+                case "r":
+                    checkRequest();
+                    break;
+                case "c":
+                    startCompGame();
+                    break;
+                case "i":
+                    checkInput();
+                    break;
+                case "F1":
+                    rules();
+                    break;
+                }
+            }, false);
+        }
+
+        function rules() {
+            rules = 
+"1. Компьютер (или Игрок) загадывает число из 4 разных цифр. Ноль может стоять на первой позиции." +
+"<br>2. Цель игры угадать число путем предложения возможного числа." +
+"<br>3.Предложение также должно состоять из 4 разных цифр." +
+"<br>4. Совпадение цифры в предложенном и загаданном числе записывается как один Бык, если позиция цифры одинакова. Количество совпадений суммируется и выдается как результат, например 'Б2'" +
+"<br>5. Если позиция одинаковой цифры не совпадает это записывается как одна Корова. Количество совпадений также суммируется и выдается как результат, например 'К3'." +
+"<br>6. В результате, ответ может содержать не более чем 4 быка и коровы. Ответ 4 быка ('Б4 К0') означает, что число отгадано."
+
+            document.getElementById("info").innerHTML += rules;
+        }
+    </script>
+    
+</body>
